@@ -5,10 +5,10 @@
 //              crawlercpp library.
 // Public interfaces:
 //   *exception
-//   *bad_uri_exception
+//   *uri_exception
 //   *not_implemented_exception
 // Modification 08/15/2014: Implementation of the classes exception and
-//                          bad_uri_exception
+//                          uri_exception
 // ============================================================================
 
 
@@ -24,6 +24,10 @@ std::string crawler_cpp::exceptions::exception::get_message() const {
   return this->message_;
 }
 
+const char* crawler_cpp::exceptions::exception::what() const throw(){
+  return this->get_message().c_str();
+}
+
 std::ostream& operator<<(std::ostream &os,
                          const crawler_cpp::exceptions::exception &err){
   os << err.get_message();
@@ -31,17 +35,17 @@ std::ostream& operator<<(std::ostream &os,
 }
 
 
-// === class bad_uri_exception ================================================
-crawler_cpp::exceptions::bad_uri_exception::bad_uri_exception(
+// === class uri_exception ====================================================
+crawler_cpp::exceptions::uri_exception::uri_exception(
   const std::string &message, const std::string &uri)
   :exception(message), uri_(uri) { }
 
-std::string crawler_cpp::exceptions::bad_uri_exception::get_uri() const {
+std::string crawler_cpp::exceptions::uri_exception::get_uri() const {
   return this->uri_;
 }
 
 std::ostream& operator<<(std::ostream &os,
-                         const crawler_cpp::exceptions::bad_uri_exception &err){
+                         const crawler_cpp::exceptions::uri_exception &err){
   os << err.get_message() << " (bad uri: " << err.get_uri() << ")";
   return os;
 }
