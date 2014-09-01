@@ -63,16 +63,15 @@ namespace crawler_cpp {
       // The desctructor of this class
       virtual ~not_implemented_exception() throw() {}
     }; // end of class not_implemented_exception
+
+    std::ostream& operator<<(std::ostream&,
+			     const crawler_cpp::exceptions::exception&);
+
+    std::ostream& operator<<(std::ostream &,
+			     const crawler_cpp::exceptions::uri_exception &);
+
+    std::ostream& operator<<(std::ostream &,
+ 	           const crawler_cpp::exceptions::not_implemented_exception &);
   } // end of namespace exceptions
 } // end of namespace crawler_cpp
-
-std::ostream& operator<<(std::ostream&,
-                const crawler_cpp::exceptions::exception&);
-
-std::ostream& operator<<(std::ostream &,
-                const crawler_cpp::exceptions::uri_exception &);
-
-std::ostream& operator<<(std::ostream &,
-                const crawler_cpp::exceptions::not_implemented_exception &);
-
 #endif // EXCEPTIONS_H

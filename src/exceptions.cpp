@@ -28,7 +28,7 @@ const char* crawler_cpp::exceptions::exception::what() const throw(){
   return this->get_message().c_str();
 }
 
-std::ostream& operator<<(std::ostream &os,
+std::ostream& crawler_cpp::exceptions::operator<<(std::ostream &os,
                          const crawler_cpp::exceptions::exception &err){
   os << err.get_message();
   return os;
@@ -44,7 +44,7 @@ std::string crawler_cpp::exceptions::uri_exception::get_uri() const {
   return this->uri_;
 }
 
-std::ostream& operator<<(std::ostream &os,
+std::ostream& crawler_cpp::exceptions::operator<<(std::ostream &os,
                          const crawler_cpp::exceptions::uri_exception &err){
   os << err.get_message() << " (bad uri: " << err.get_uri() << ")";
   return os;
@@ -58,7 +58,7 @@ crawler_cpp::exceptions::not_implemented_exception::not_implemented_exception(
 crawler_cpp::exceptions::not_implemented_exception::not_implemented_exception()
   :not_implemented_exception("") {}
 
-std::ostream& operator<<(std::ostream &os,
+std::ostream& crawler_cpp::exceptions::operator<<(std::ostream &os,
                 const crawler_cpp::exceptions::not_implemented_exception &err){
   os << err.get_message();
   return os;

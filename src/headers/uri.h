@@ -23,9 +23,9 @@ namespace crawler_cpp {
     // This class represents uris and all processes that are offered for uris.
     class uri {
     public:
-      const std::string HTTP_SCHEME = "http";
-      const std::string HTTPS_SCHEME = "https";
-      const std::string MAILTO_SCHEME = "mailto";
+      const std::string SCHEME_HTTP = "http";
+      const std::string SCHEME_HTTPS = "https";
+      const std::string SCHEME_MAILTO = "mailto";
       // This constructor requires a string that represents the original uri
       // which is normalized and finally wrapped by this class
       uri(const std::string&);
@@ -42,7 +42,7 @@ namespace crawler_cpp {
       bool is_https() const;
       // Returns true if the scheme of the uri represented by this class is
       // "mailto"
-      bool is_mail() const;
+      bool is_mailto() const;
       // A getter for the scheme part of the normalized uri
       std::string get_scheme() const;
       // A getter for the host part of the normalized uri
@@ -63,6 +63,12 @@ namespace crawler_cpp {
       std::string get_original_uri() const;
       // A getter for the normalized uri represented by this class
       std::string get_normalized_uri() const;
+      // A getter for the local part of the normalized uri that is
+      // an email represented by this class
+      std::string get_local_part() const;
+      // A getter for the global part of the normalized uri that is
+      // an email represented by this class
+      std::string get_global_part() const;
       // This method appends the passed suffix to the current uri instance
       // and returns the merged uri as a new uri instance
       uri append(const std::string&) const;
@@ -89,9 +95,9 @@ namespace crawler_cpp {
       // Holds the normalized uri string
       std::string normalized_uri_;
     }; // end of class uri
+
+    std::ostream& operator <<(std::ostream&, const crawler_cpp::data::uri&);
   } // end of namespace data
 } // end of namespace crawler_cpp
-
-std::ostream& operator <<(std::ostream&, const crawler_cpp::data::uri&);
 
 #endif // URI_HPP
