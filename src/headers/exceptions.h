@@ -1,4 +1,4 @@
-// ============================================================================
+// ====================================================================================================================
 // Author: Lukas Georgieff
 // File: exceptions.h
 // Description: This header file defines all exceptions used by the crawlercpp
@@ -7,9 +7,8 @@
 //   *exception
 //   *uri_exception
 //   *not_implemented_exception
-// Modification 08/15/2014: Definition of the classes exception, uri_exception
-//                          and not_implemented_exception
-// ============================================================================
+// Modification 08/15/2014: Definition of the classes exception, uri_exception and not_implemented_exception.
+// ====================================================================================================================
 
 
 #ifndef EXCEPTIONS_H
@@ -64,14 +63,11 @@ namespace crawler_cpp {
       virtual ~not_implemented_exception() throw() {}
     }; // end of class not_implemented_exception
 
-    std::ostream& operator<<(std::ostream&,
-			     const crawler_cpp::exceptions::exception&);
+    std::ostream& operator<<(std::ostream&, const crawler_cpp::exceptions::exception&);
 
-    std::ostream& operator<<(std::ostream &,
-			     const crawler_cpp::exceptions::uri_exception &);
+    std::ostream& operator<<(std::ostream &, const crawler_cpp::exceptions::uri_exception &);
 
-    std::ostream& operator<<(std::ostream &,
- 	           const crawler_cpp::exceptions::not_implemented_exception &);
+    std::ostream& operator<<(std::ostream &, const crawler_cpp::exceptions::not_implemented_exception &);
   } // end of namespace exceptions
 } // end of namespace crawler_cpp
 #endif // EXCEPTIONS_H

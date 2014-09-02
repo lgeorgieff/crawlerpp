@@ -1,4 +1,4 @@
-// ============================================================================
+// ====================================================================================================================
 // Author: Lukas Georgieff
 // File: uri.h
 // Description: This header file defines the uri class that wraps all
@@ -6,7 +6,7 @@
 // Public interfaces:
 //   *uri
 // Modification 08/15/2014: Definition of the class uri.
-// ============================================================================
+// ====================================================================================================================
 
 
 #ifndef URI_HPP
@@ -99,5 +99,8 @@ namespace crawler_cpp {
     std::ostream& operator <<(std::ostream&, const crawler_cpp::data::uri&);
   } // end of namespace data
 } // end of namespace crawler_cpp
+
+
+void test_fun(); // TODO: remove
 
 #endif // URI_HPP

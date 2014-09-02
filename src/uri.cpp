@@ -1,4 +1,4 @@
-// ============================================================================
+// ====================================================================================================================
 // Author: Lukas Georgieff
 // File: uri.cpp
 // Description: This implementation file implements all the uri class that
@@ -6,7 +6,8 @@
 // Public interfaces:
 //   *uri
 // Modification 08/15/2014: Implementation of the class uri.
-// ============================================================================
+// Modification 02/09/2014: Implementation of a state machin for uri parsing.
+// ====================================================================================================================
 
 
 #include "uri.h"
@@ -17,21 +18,21 @@
 #include <sstream>
 #include <algorithm>
 #include <cstddef>
+#include <iostream> // TODO: remove
+#include <cassert> // TODO: remove
 
 using std::string;
-using std::toupper;
 using std::hex;
 using std::stringstream;
 using crawler_cpp::exceptions::uri_exception;
 
-// The following namespace contains some helper methods used only in
-// this implementation file
+// The following namespace contains some helper methods used only in this implementation file
 namespace {
 
 
-  /****************************************************************************
+  /********************************************************************************************************************
    http://tools.ietf.org/html/rfc3986#section-6
-   ***************************************************************************/
+  ********************************************************************************************************************/
 
   // Transforms tha passed string to an unsigned short.
   // Note: the base is 16 (i.e. hex)
@@ -45,10 +46,16 @@ namespace {
   }
 
   // Transforms all characters of the passed string to lower case.
-  // Note the passed string is altered directly.
   string string_to_lower(const string &str){
     string result(str);
     transform(result.begin(), result.end(), result.begin(), tolower);
+    return result;
+  }
+
+  // Transforms all characters of the passed string to upper case.
+  string string_to_upper(const string &str){
+    string result(str);
+    transform(result.begin(), result.end(), result.begin(), toupper);
     return result;
   }
 
@@ -188,60 +195,131 @@ namespace {
       string fragment;
     };
 
+    // Merges two arrays of the same type and returns a const pointer to a const T.
     template<typename T>
-    const T *const merge_arrays(const T arr_1[], size_t size_1,
-				const T arr_2[], size_t size_2){
+    const T *const merge_arrays(const T arr_1[], size_t size_1,	const T arr_2[], size_t size_2){
       T *result(new char[size_1 + size_2]);
-      for(size_t i(0); i != size_1; ++i)
-	result[i] = arr_1[i];
-      for(size_t i(size_1); i != size_1 + size_2; ++i)
-	result[i] = arr_2[i - size_1];
+      for(size_t i(0); i != size_1; ++i) result[i] = arr_1[i];
+      for(size_t i(size_1); i != size_1 + size_2; ++i) result[i] = arr_2[i - size_1];
       return result;
     }
 
-    const size_t LOWER_ALPHA_SIZE(26);
-    const char LOWER_ALPHA[LOWER_ALPHA_SIZE] { 'a', 'b', 'c', 'd', 'e', 'f',
-	'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-	'u', 'v', 'w', 'x', 'y', 'z' };
-    const size_t UPPER_ALPHA_SIZE(26);
-    const char UPPER_ALPHA[UPPER_ALPHA_SIZE] { 'A', 'B', 'C', 'D', 'E', 'F',
-	'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-	'U', 'V', 'W', 'X', 'Y', 'Z' };
-    const size_t ALPHA_SIZE(LOWER_ALPHA_SIZE + UPPER_ALPHA_SIZE);
-    const char* const ALPHA(merge_arrays<char>(LOWER_ALPHA, LOWER_ALPHA_SIZE,
-					       UPPER_ALPHA, UPPER_ALPHA_SIZE));
-    const size_t DIGIT_SIZE(10);
-    const char DIGIT[DIGIT_SIZE] { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-	'9' };
-    const size_t UNRESERVED_SIZE(ALPHA_SIZE + DIGIT_SIZE + 4);
-    const char* const unreserved(merge_arrays<char>
-				 (merge_arrays<char>(ALPHA, ALPHA_SIZE,
-						     DIGIT, DIGIT_SIZE),
-				  ALPHA_SIZE + DIGIT_SIZE,
-				  (const char[]){ '-', '.', '_', '~' }, 4));
-    // delimiters of the generic URI components
-    const size_t GEN_DELIMITER_SIZE(7);
-    const char GEN_DELIMITER[GEN_DELIMITER_SIZE] { ':', '/', '?', '#', '[',
-	']', '@' };
-    // reserved for use as subcomponent delimiters
-    const size_t SUB_DELIMITER_SIZE(11);
-    const char SUB_DELIMITER[SUB_DELIMITER_SIZE] { '!', '$', '&', '\'', '(',
-	')', '*', '+', ',', ';', '=' };
-    const size_t RESERVED_SIZE(GEN_DELIMITER_SIZE + SUB_DELIMITER_SIZE);
-    const char* const RESERVED(merge_arrays<char>(GEN_DELIMITER,
-						  GEN_DELIMITER_SIZE,
-						  SUB_DELIMITER,
-						  SUB_DELIMITER_SIZE));
-    
+    namespace constants {
+      const size_t LOWER_ALPHA_SIZE(26);
+      const char LOWER_ALPHA[LOWER_ALPHA_SIZE] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+	  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+      const size_t UPPER_ALPHA_SIZE(26);
+      const char UPPER_ALPHA[UPPER_ALPHA_SIZE] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+	  'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
+      const size_t ALPHA_SIZE(LOWER_ALPHA_SIZE + UPPER_ALPHA_SIZE);
+      const char* const ALPHA(merge_arrays<char>(LOWER_ALPHA, LOWER_ALPHA_SIZE, UPPER_ALPHA, UPPER_ALPHA_SIZE));
+      const size_t DIGIT_SIZE(10);
+      const char DIGIT[DIGIT_SIZE] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+      const size_t UNRESERVED_SIZE(ALPHA_SIZE + DIGIT_SIZE + 4);
+      const char* const UNRESERVED(merge_arrays<char>
+				   (merge_arrays<char>(ALPHA, ALPHA_SIZE, DIGIT, DIGIT_SIZE), ALPHA_SIZE + DIGIT_SIZE,
+				    (const char[]){ '-', '.', '_', '~' }, 4));
+      // delimiters of the generic URI components
+      const size_t GEN_DELIMITER_SIZE(7);
+      const char GEN_DELIMITER[GEN_DELIMITER_SIZE] { ':', '/', '?', '#', '[', ']', '@' };
+      // reserved for use as subcomponent delimiters
+      const size_t SUB_DELIMITER_SIZE(11);
+      const char SUB_DELIMITER[SUB_DELIMITER_SIZE] { '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=' };
+      const size_t RESERVED_SIZE(GEN_DELIMITER_SIZE + SUB_DELIMITER_SIZE);
+      const char* const RESERVED(merge_arrays<char>(GEN_DELIMITER, GEN_DELIMITER_SIZE, SUB_DELIMITER,
+						    SUB_DELIMITER_SIZE));
+      // characters that can be used for percent-encoding (lower and upper character version)
+      const size_t HEX_DIGIT_SIZE(DIGIT_SIZE + 12);
+      const char* const HEX_DIGIT(merge_arrays<char>
+				  (DIGIT, DIGIT_SIZE,
+				   (const char[]){ 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F' }, 12));
+      const char ENCODING_START('%');
+      const char SCHEME_END(':');
+    } // end of namespace constants
+      
 
-    uri_parts start_state(string::const_iterator position,
-			  string::const_iterator end){
-      return uri_parts();
+    using constants::ALPHA;
+    using constants::ALPHA_SIZE;
+    using constants::DIGIT;
+    using constants::DIGIT_SIZE;
+    using constants::HEX_DIGIT;
+    using constants::HEX_DIGIT_SIZE;
+    using constants::ENCODING_START;
+    using constants::SCHEME_END;
+    
+    // The percentage encoding is of the form "%" HEXDIG HEXDIG
+    string percentage_state_1(const string &uri, string::const_iterator &uri_pos, char first_encoded_part){
+      if(uri_pos == uri.end() || std::find(HEX_DIGIT, HEX_DIGIT + HEX_DIGIT_SIZE, *uri_pos) ==
+	 HEX_DIGIT + HEX_DIGIT_SIZE)
+	throw uri_exception("Bad percent-encoding, two HEX-characters expected after '%'!", uri);
+      unsigned short encoded_value(hex_to_ushort(string() + first_encoded_part + *uri_pos));
+      ++uri_pos;
+      // encode free characters to their actual char value
+      if(encoded_value == 0x2d || encoded_value == 0x2e || encoded_value == 0x5f || encoded_value == 0x7e ||
+	 (encoded_value >= 0x41 && encoded_value <= 0x5a) ||
+	 (encoded_value >= 0x61 && encoded_value <= 0x7a) ||
+	 (encoded_value >= 0x30 && encoded_value <= 0x39)){
+	return string() + static_cast<char>(encoded_value);
+      // normalize percent encoding to upper case
+      } else {
+	return string_to_upper(string() + first_encoded_part + *uri_pos);
+      }
+    }
+
+    // The percentage encoding is of the form "%" HEXDIG HEXDIG
+    string percentage_state_0(const string &uri, string::const_iterator &uri_pos){
+      if(uri_pos == uri.end() || std::find(HEX_DIGIT, HEX_DIGIT + HEX_DIGIT_SIZE, *uri_pos) ==
+	 HEX_DIGIT + HEX_DIGIT_SIZE)
+	 throw uri_exception("Bad percent-encoding, two HEX-characters expected after '%'!", uri);
+      else return percentage_state_1(uri, ++uri_pos, *uri_pos);
+    }
+
+    // The scheme part is fo the form: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+    string scheme_state_1(const string &uri, string::const_iterator &uri_pos, string built_scheme){
+      if(uri_pos == uri.end()) return built_scheme;
+      if(std::find(ALPHA, ALPHA + ALPHA_SIZE, *uri_pos) != ALPHA + ALPHA_SIZE ||
+	 std::find(DIGIT, DIGIT + DIGIT_SIZE, *uri_pos) != DIGIT + DIGIT_SIZE ||
+	 '+' == *uri_pos || '-' == *uri_pos || '.' == *uri_pos){
+	return scheme_state_1(uri, ++uri_pos, built_scheme + static_cast<char>(std::tolower(*uri_pos)));
+      }else if(*uri_pos == SCHEME_END){
+	return built_scheme;
+      }else if(*uri_pos == ENCODING_START){
+	string percentage_result(string_to_lower(percentage_state_0(uri, ++uri_pos)));
+	if(percentage_result.length() == 1) return scheme_state_1(uri, uri_pos, built_scheme + percentage_result);
+	else throw uri_exception("The scheme part of an URI must contain only alphanumerical characters and the\
+ characters '+', '-' and '.'!", uri);;
+      }else{
+	throw uri_exception("The scheme part of an URI must contain only alphanumerical characters and the characters\
+ '+', '-' and '.'!", uri);
+      }
+    }
+
+    // The scheme part is fo the form: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+    string scheme_state_0(const string &uri, string::const_iterator &uri_pos){
+      if(uri_pos == uri.end()) throw uri_exception("Empty URI!", uri);
+      if(std::find(ALPHA, ALPHA + ALPHA_SIZE, *uri_pos) != ALPHA + ALPHA_SIZE){
+	return scheme_state_1(uri, ++uri_pos, string() + char(std::tolower(*uri_pos)));
+      }else if(*uri_pos == ENCODING_START){
+	string percentage_result(string_to_lower(percentage_state_0(uri, ++uri_pos)));
+	if(percentage_result.length() == 1) return scheme_state_1(uri, uri_pos, percentage_result);
+	else throw uri_exception("The scheme part of an URI must start with an alphabetic character!", uri);
+      }else{
+	throw uri_exception("The scheme part of an URI must start with an alphabetic character!", uri);
+      }
+    }
+
+    // The start state of this state machine
+    uri_parts start_state(const string &uri){
+      uri_parts parsed_uri_parts;
+      string::const_iterator uri_pos(uri.begin());
+      parsed_uri_parts.scheme = scheme_state_0(uri, uri_pos);
+      std::cout << "scheme: " << parsed_uri_parts.scheme << " (" << uri << std::endl;
+      return parsed_uri_parts;
     }
   } // end of namespace
 } // end of anonymous namespace
 
-// === constructors ===========================================================
+// === constructors ===================================================================================================
 crawler_cpp::data::uri::uri(const string &uri)
   :original_uri_(uri) {
   this->normalize_(uri);
@@ -252,7 +330,7 @@ crawler_cpp::data::uri::uri(const crawler_cpp::data::uri &uri)
 
 crawler_cpp::data::uri::~uri(){ }
 
-// === getters ================================================================
+// === getters ========================================================================================================
 bool crawler_cpp::data::uri::is_http() const {
   return this->get_scheme() == uri::SCHEME_HTTP;
 }
@@ -266,8 +344,7 @@ bool crawler_cpp::data::uri::is_mailto() const {
 }
 
 string crawler_cpp::data::uri::get_scheme() const {
-  return string(this->normalized_uri_.substr(0,
-                  this->normalized_uri_.find(":")));
+  return string(this->normalized_uri_.substr(0, this->normalized_uri_.find(":")));
 }
 
 string crawler_cpp::data::uri::get_host() const {
@@ -308,15 +385,13 @@ string crawler_cpp::data::uri::get_fragment() const {
 string crawler_cpp::data::uri::get_local_part() const {
   size_t pos_of_scheme(this->normalized_uri_.find(":"));
   size_t pos_of_at(this->normalized_uri_.find("@", pos_of_scheme + 1));
-  return this->normalized_uri_.substr(pos_of_scheme + 1,
-                 pos_of_at - pos_of_scheme - 1);
+  return this->normalized_uri_.substr(pos_of_scheme + 1, pos_of_at - pos_of_scheme - 1);
 }
 
 string crawler_cpp::data::uri::get_global_part() const {
   size_t pos_of_scheme(this->normalized_uri_.find(":"));
   size_t pos_of_at(this->normalized_uri_.find("@", pos_of_scheme + 1));
-  return  this->normalized_uri_.substr(pos_of_at + 1,
-            this->normalized_uri_.length() - pos_of_at - 1);
+  return  this->normalized_uri_.substr(pos_of_at + 1, this->normalized_uri_.length() - pos_of_at - 1);
 }
 
 string crawler_cpp::data::uri::get_original_uri() const {
@@ -327,21 +402,19 @@ string crawler_cpp::data::uri::get_normalized_uri() const {
   return this->normalized_uri_;
 }
 
-crawler_cpp::data::uri crawler_cpp::data::uri::append(
-  const string &suffix) const {
+crawler_cpp::data::uri crawler_cpp::data::uri::append(const string &suffix) const {
   // TODO: implement
   // See: http://tools.ietf.org/html/rfc3986#section-5.2.1
   throw crawler_cpp::exceptions::not_implemented_exception();
 }
 
-// === operators ==============================================================
-std::ostream& crawler_cpp::data::operator<<(std::ostream& os, const crawler_cpp::data::uri &uri){
+// === operators ======================================================================================================
+std::ostream& crawler_cpp::data::operator<<(std::ostream &os, const crawler_cpp::data::uri &uri){
   os << uri.get_normalized_uri();
   return os;
 }
 
-bool crawler_cpp::data::uri::operator==(const crawler_cpp::data::uri &uri)
-  const {
+bool crawler_cpp::data::uri::operator==(const crawler_cpp::data::uri &uri) const {
   return this->get_normalized_uri() == uri.get_normalized_uri();
 }
 
@@ -349,8 +422,7 @@ bool crawler_cpp::data::uri::operator==(const string &uri) const {
   return this->get_normalized_uri() == uri;
 }
 
-bool crawler_cpp::data::uri::operator!=(const crawler_cpp::data::uri &uri)
-  const {
+bool crawler_cpp::data::uri::operator!=(const crawler_cpp::data::uri &uri) const {
   return !(*this == uri);
 }
 
@@ -358,16 +430,15 @@ bool crawler_cpp::data::uri::operator!=(const string &uri) const {
   return !(*this == uri);
 }
 
-crawler_cpp::data::uri& crawler_cpp::data::uri::operator=(
-  const crawler_cpp::data::uri &uri){
+crawler_cpp::data::uri& crawler_cpp::data::uri::operator=(const crawler_cpp::data::uri &uri){
   if(*this == uri) return *this;
   this->original_uri_ = uri.original_uri_;
   this->normalized_uri_ = uri.normalized_uri_;
   return *this;
 }
 
-// === private helpers ========================================================
-string crawler_cpp::data::uri::normalize_(const string& uri){
+// === private helpers ================================================================================================
+string crawler_cpp::data::uri::normalize_(const string &uri){
   /*  string normalized_encodings(normalize_percent_encodings(uri));
   //  std::cout << "normalized_encodings: _" << normalized_encodings << "_" << std::endl;
   string scheme(get_scheme_part(normalized_encodings));
@@ -407,4 +478,27 @@ http://www.example.com/display? → http://www.example.com/display
   // Note: throws an uri_exception
   //throw crawler_cpp::exceptions::not_implemented_exception();
   return "";
+}
+
+
+
+void test_fun(){
+  uri_statemachine::start_state("http://this.is/a#test%7eJohn%a2Doe?query_1=hello&query_2=world");
+  uri_statemachine::start_state("HTTP://123.95.10.23:443/a#test%7eJohn%a2Doe?query_1=hello&query_2=world");
+  uri_statemachine::start_state("%48TTP://123.95.10.23:443/a#test%7eJohn%a2Doe?query_1=hello&query_2=world");
+  uri_statemachine::start_state("HT%54P://123.95.10.23:443/a#test%7eJohn%a2Doe?query_1=hello&query_2=world");
+  uri_statemachine::start_state("mailto:JOHN.doe@googleMAiL.Com");
+  uri_statemachine::start_state("mailto:JOHN.do(any comment)e@google(another (nested comment) comment)MaiL.Com");
+  uri_statemachine::start_state("mailto:JOHN.doe(any comment)@[123.226.11.23](An IPv4 address instead a hostname)");
+  uri_statemachine::start_state("mailto:JOhn.d(any comment)oe@[::ffff:123.226.11.23](An IPv6 address instead a hostname)");
+  uri_statemachine::start_state("mailto:JOhN.(any comment)doe@[2001:0db8:0000:08d3:0000:8a2e:0070:7344](An IPv6 address instead a hostname)");
+  uri_statemachine::start_state("mailto:(any comment)john.doe@[2001:db8::1428:57ab](An IPv6 address instead a hostname)");
+  try{
+    uri_statemachine::start_state("ma%3filto:(any comment)john.doe@[2001:db8::1428:57ab](An IPv6 address instead a hostname)");
+    assert(false);
+  } catch(uri_exception &err){ }
+  try{
+    uri_statemachine::start_state(":(any comment)john.doe@[2001:db8::1428:57ab](An IPv6 address instead a hostname)");
+    assert(false);
+  }catch(uri_exception &err){ }
 }
