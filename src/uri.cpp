@@ -6,17 +6,15 @@
 // Public interfaces:
 //   *uri
 // Modification 08/15/2014: Implementation of the class uri.
-// Modification 02/09/2014: Implementation of a state machin for uri parsing.
+// Modification 02/09/2014: Implementation of a state machine for uri parsing.
 // ====================================================================================================================
 
 
 #include "uri.h"
 #include "exceptions.h"
+#include "utils.h"
 
 #include <iostream>
-#include <cctype>
-#include <sstream>
-#include <algorithm>
 #include <cstddef>
 #include <iostream> // TODO: remove
 #include <cassert> // TODO: remove
@@ -34,177 +32,20 @@ namespace {
    http://tools.ietf.org/html/rfc3986#section-6
   ********************************************************************************************************************/
 
-  // Transforms tha passed string to an unsigned short.
-  // Note: the base is 16 (i.e. hex)
-  // Note: no prefix such as 0x is required
-  unsigned short hex_to_ushort(const string &hex_str){
-    unsigned short x;   
-    stringstream ss;
-    ss << hex << hex_str;
-    ss >> x;
-    return x;
-  }
-
-  // Transforms all characters of the passed string to lower case.
-  string string_to_lower(const string &str){
-    string result(str);
-    transform(result.begin(), result.end(), result.begin(), tolower);
-    return result;
-  }
-
-  // Transforms all characters of the passed string to upper case.
-  string string_to_upper(const string &str){
-    string result(str);
-    transform(result.begin(), result.end(), result.begin(), toupper);
-    return result;
-  }
-
-  /*
-  bool is_ip(const string &hostname){
-    // TODO: implement
-    return false;
-  }
-
-  string normalize_hostname(const string &hostname){
-    string lower_name(string_to_lower(hostname));
-    if(is_ip(lower_name)){
-      // TODO: resolve IP
-      // jsmith@[192.168.2.1]
-      //  * IPv4
-      //  * IPv6
-    } else {
-      size_t current_label(0);
-      for(size_t i(0); i != hostname.length(); ++i){
-	// letters, digits, dots, hyphen
-	// not end with hyphen
-	// not start with digit or hyphen
-	// length of label: 1 - 63
-	// max length of hostname (including "."): 255
-      }
-    }
-    return lower_name;
-  }
-
-  // Transforms unreserved %-escaped characters to their actual values
-  // and all percent-encodings to upper case.
-  // See: http://tools.ietf.org/html/rfc3986#section-2.3
-  string normalize_percent_encodings(const string &uri){
-    string result;
-    for(size_t i(0); i < uri.length(); ++i){
-      if(uri[i] == '%' && i < uri.length() - 2){
-	unsigned short value(hex_to_ushort(uri.substr(i + 1, 2)));
-	if(value == 0x2d || value == 0x2e || value == 0x5f || value == 0x7e ||
-	   (value >= 0x41 && value <= 0x5a) ||
-	   (value >= 0x61 && value <= 0x7a) ||
-	   (value >= 0x30 && value <= 0x39)){
-	  result += static_cast<char>(value);
-	  i += 2;
-	} else {
-	  result += uri[i];
-	  result += toupper(uri[i + 1]);
-	  result += toupper(uri[i + 2]);
-	  i += 2;
-	}
-      }
-      else { result += uri[i]; }
-    }
-    return result;
-  }
-
-  // Returns the scheme of the passed uri. If no scheme is found,
-  // a uri_exception is thrown.
-  string get_scheme_part(const string &uri){
-    size_t pos_of_scheme = uri.find(":");
-    if(pos_of_scheme == string::npos){
-      throw uri_exception("No scheme found!", uri);
-    } else {
-      string scheme(uri.substr(0, pos_of_scheme));
-      return string_to_lower(scheme);
-    }
-  }
-
-  // Removes all comments, i.e. all parts within "(" and ")" of the passed
-  // email part.
-  string remove_comments_from_mailto(const string &part){
-    size_t first_closing_pos(part.find(")"));
-    size_t last_opening_pos(part.rfind("(", first_closing_pos));
-    string result;
-    if(first_closing_pos == string::npos && last_opening_pos == string::npos){
-      return part;
-    } else if((string::npos == first_closing_pos && string::npos != last_opening_pos)
-       || (string::npos == last_opening_pos &&
-	   string::npos == first_closing_pos)){
-      throw uri_exception("Bad comment in mailto uri!", part);
-    } else {
-      result = part.substr(0, last_opening_pos);
-      result += part.substr(first_closing_pos + 1,
-		 part.length() - first_closing_pos - 1);
-    }
-    string next(remove_comments_from_mailto(result));
-    if(next == result) return result;
-    else return remove_comments_from_mailto(next);
-  }
-
-  // Sets the passed string references local and global to the local and global
-  // part of the passed email.
-  // Note: the passed email should already be normalized by means of
-  // letter-case and percent-encodings.
-  // Note: the passed email will be checked for syntax and length
-  void get_parts_from_mailto(const string &mail, string &local, string &global){
-    size_t pos_of_scheme(mail.find(":"));
-    size_t pos_of_at(mail.find("@", pos_of_scheme + 1));
-    if(pos_of_scheme == string::npos){
-      throw uri_exception("No scheme found!", mail);
-    } else if(pos_of_at == string::npos) {
-      throw uri_exception("No \"@\" character found in mailto uri!", mail);
-    } else if(pos_of_at == mail.length() - 1) {
-      throw uri_exception("No global part found in mailto uri", mail);
-    } else {
-      local = mail.substr(pos_of_scheme + 1, pos_of_at - pos_of_scheme - 1);
-      global = mail.substr(pos_of_at + 1, mail.length() - pos_of_at - 1);
-    }
-    try {
-      local = string_to_lower(remove_comments_from_mailto(local));
-      global = string_to_lower(remove_comments_from_mailto(global));
-    }
-    catch(uri_exception &err){
-      throw uri_exception("Bad comment found in mailto uri!", mail);
-    }
-    if(local.length() > 64)
-      throw uri_exception("Local part of mailto uri is too long!", mail);
-    if(global.length() > 255)
-      throw uri_exception("Global part of mailto uri is too long!", mail);
-    if(local.length() + global.length() + 1 > 254)
-      throw uri_exception("mailto uri is too long!", mail);
-    for(char &c : local)
-      if(c < 65 && c > 90 && c  < 97 && c > 122 && c < 48 && c > 57 && c != 33 && c < 35 && c > 39 && c < 42 && c > 43 && c != 45 && c != 47 && c != 61 && c != 63 && c < 95 && c > 96 && c < 123 && c > 126 && c != 46)
-	throw uri_exception("The mailto uri contains the invalid character \"" + string(1, c) + "\"", mail);
-    if(global[0] == '[' && global[global.length() - 1] == ']'){
-      global.erase(global.length() - 1, 1);
-      global.erase(0, 1);
-    }
-    global = normalize_hostname(global);
-  }
-  */
-
   namespace uri_statemachine {
     struct uri_parts {
       string scheme;
-      string here;
+      string user;
+      string host;
+      string port;
+      string path;
       string query;
       string fragment;
     };
 
-    // Merges two arrays of the same type and returns a const pointer to a const T.
-    template<typename T>
-    const T *const merge_arrays(const T arr_1[], size_t size_1,	const T arr_2[], size_t size_2){
-      T *result(new char[size_1 + size_2]);
-      for(size_t i(0); i != size_1; ++i) result[i] = arr_1[i];
-      for(size_t i(size_1); i != size_1 + size_2; ++i) result[i] = arr_2[i - size_1];
-      return result;
-    }
-
     namespace constants {
+      using crawler_cpp::utils::merge_arrays;
+
       const size_t LOWER_ALPHA_SIZE(26);
       const char LOWER_ALPHA[LOWER_ALPHA_SIZE] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 	  'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
@@ -235,6 +76,11 @@ namespace {
 				   (const char[]){ 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F' }, 12));
       const char ENCODING_START('%');
       const char SCHEME_END(':');
+      const char QUERY_START('?');
+      const char FRAGMENT_START('#');
+      const char PATH_SEPARATOR('/');
+      const char IPV6_START('[');
+      const char IPV6_END(']');
     } // end of namespace constants
       
 
@@ -246,7 +92,16 @@ namespace {
     using constants::HEX_DIGIT_SIZE;
     using constants::ENCODING_START;
     using constants::SCHEME_END;
+    using constants::QUERY_START;
+    using constants::FRAGMENT_START;
+    using constants::PATH_SEPARATOR;
+    using constants::IPV6_START;
+    using constants::IPV6_END;
+    using crawler_cpp::utils::hex_to_ushort;
+    using crawler_cpp::utils::string_to_upper;
+    using crawler_cpp::utils::string_to_lower;
     
+  
     // The percentage encoding is of the form "%" HEXDIG HEXDIG
     string percentage_state_1(const string &uri, string::const_iterator &uri_pos, char first_encoded_part){
       if(uri_pos == uri.end() || std::find(HEX_DIGIT, HEX_DIGIT + HEX_DIGIT_SIZE, *uri_pos) ==
@@ -273,6 +128,151 @@ namespace {
 	 throw uri_exception("Bad percent-encoding, two HEX-characters expected after '%'!", uri);
       else return percentage_state_1(uri, ++uri_pos, *uri_pos);
     }
+
+
+
+
+
+    void authority_state_0(const string &uri, string::const_iterator &uri_pos,
+			     string &user_info, string &host, string &port){
+      if(*uri_pos == IPV6_START){
+	// TODO: ipv 6
+      } else if(*uri_pos == ENCODING_START) {
+	// TODO: %..
+      } else {
+	// TODO: bad character
+	throw uri_exception("", uri);
+      }
+
+      // authority = [ userinfo "@" ] host [ ":" port ]
+
+        // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
+          // unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
+          // pct-encoded = "%" HEXDIG HEXDIG
+          // sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+
+        // host = IP-literal / IPv4address / reg-name
+          // IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+          // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
+           // dec-octet = DIGIT / %x31-39 DIGIT / "1" 2DIGIT / "2" %x30-34 DIGIT / "25" %x30-35
+         // reg-name = *( unreserved / pct-encoded / sub-delims )
+
+        // port = *DIGIT
+
+
+    }
+
+    string ip_v6_state_0(const string &uri, string::const_iterator &uri_pos){
+      return "";
+
+
+      // IPv6address = 6( h16 ":" ) ls32
+      //               / "::" 5( h16 ":" ) ls32
+      //               / [h16 ] "::" 4( h16 ":" ) ls32
+      //               / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+      //               / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+      //               / [ *3( h16 ":" ) h16 ] "::"  h16 ":" ls32
+      //               / [ *4( h16 ":" ) h16 ] "::" ls32
+      //               / [ *5( h16 ":" ) h16 ] "::" h16
+      //               / [ *6( h16 ":" ) h16 ] "::"
+        // h16 = 1*4HEXDIG
+        // ls32 = ( h16 ":" h16 )
+        //        / IPv4address
+
+      // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
+      // dec-octet = DIGIT
+      //             / %x31-39 DIGIT
+      //             / "1" 2DIGIT
+      //             / "2" %x30-34 DIGIT
+      //             / "25" %x30-35
+    }
+
+
+    string query_state_0(const string &uri, string::const_iterator &uri_pos){
+      return "";
+    }
+
+    string fragment_state_0(const string &uri, string::const_iterator &uri_pos){
+      return "";
+    }
+
+
+    /*
+The authority component is preceded by a double slash ("//") and is
+terminated by the next slash ("/"), question mark ("?"), or number
+sign ("#") character, or by the end of the URI.
+    */
+
+    /*
+URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+
+hier-part = "//" authority path-abempty / path-absolute  / path-rootless / path-empty
+
+authority = [ userinfo "@" ] host [ ":" port ]
+
+userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
+
+host = IP-literal / IPv4address / reg-name
+
+port = *DIGIT
+
+     */
+
+
+
+
+
+
+    /*
+   If host matches the rule for IPv4address, then it should be
+   considered an IPv4 address literal and not a reg-name.  Although host
+   is case-insensitive, producers and normalizers should use lowercase
+   for registered names and hexadecimal addresses for the sake of
+   uniformity, while only using uppercase letters for percent-encodings.
+
+The authority component is preceded by a double slash ("//") and is
+terminated by the next slash ("/"), question mark ("?"), or number
+sign ("#") character, or by the end of the URI.
+
+URI producers and normalizers should omit the ":" delimiter that
+separates host from port if the port component is empty.  Some
+schemes do not allow the userinfo and/or port subcomponents.
+
+If a URI contains an authority component, then the path component
+must either be empty or begin with a slash ("/") character. 
+
+Use of the format "user:password" in the userinfo field is
+deprecated.  Applications should not render as clear text any data
+after the first colon (":") character found within a userinfo
+subcomponent unless the data after the colon is the empty string
+(indicating no password).  Applications may choose to ignore or
+reject such data when it is received as part of a reference and
+should reject the storage of such data in unencrypted form.  The
+passing of authentication information in clear text has proven to be
+a security risk in almost every case where it has been used.
+
+
+Examples:
+de.wikipedia.org
+user@example.com:8080
+192.0.2.16:80
+[2001:db8::7]
+       */
+
+
+	     /*
+When authority is present, the path must
+either be empty or begin with a slash ("/") character
+
+When authority is not present, the path cannot begin with two slash
+characters ("//")
+	     */
+
+
+
+
+
+
 
     // The scheme part is fo the form: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     string scheme_state_1(const string &uri, string::const_iterator &uri_pos, string built_scheme){
@@ -313,6 +313,19 @@ namespace {
       uri_parts parsed_uri_parts;
       string::const_iterator uri_pos(uri.begin());
       parsed_uri_parts.scheme = scheme_state_0(uri, uri_pos);
+      if(*uri_pos == PATH_SEPARATOR && *(++string::const_iterator(uri_pos)) == PATH_SEPARATOR)
+	authority_state_0(uri, ++(++uri_pos), parsed_uri_parts.user, parsed_uri_parts.host, parsed_uri_parts.port);
+
+      /*
+	TODO: implement hier-part
+	  * "//" authority path-abempty
+	  * path-absolute
+	  * path-rootless
+	  * path-empty
+
+       */
+      if(*uri_pos == QUERY_START) parsed_uri_parts.query = query_state_0(uri, uri_pos);
+      if(*uri_pos == FRAGMENT_START) parsed_uri_parts.fragment = fragment_state_0(uri, uri_pos);
       std::cout << "scheme: " << parsed_uri_parts.scheme << " (" << uri << std::endl;
       return parsed_uri_parts;
     }
@@ -479,7 +492,6 @@ http://www.example.com/display? → http://www.example.com/display
   //throw crawler_cpp::exceptions::not_implemented_exception();
   return "";
 }
-
 
 
 void test_fun(){
