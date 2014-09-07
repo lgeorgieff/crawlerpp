@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <cstddef>
+#include <numeric>
 #include <iostream> // TODO: remove
 #include <cassert> // TODO: remove
 
@@ -74,13 +75,26 @@ namespace {
       const char* const HEX_DIGIT(merge_arrays<char>
 				  (DIGIT, DIGIT_SIZE,
 				   (const char[]){ 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F' }, 12));
+      // The character that marks the begining of a percent-encoding part within an URI
       const char ENCODING_START('%');
+      // The character that marks the end of the scheme part within an URI
       const char SCHEME_END(':');
+      // The character that introduces a query within a URI
       const char QUERY_START('?');
+      // The character that introduces a fragment within a character
       const char FRAGMENT_START('#');
+      // The character that represents the path separator in URIs
       const char PATH_SEPARATOR('/');
+      // The charachter that marks the begining of an IPv6 address within an URI
       const char IPV6_START('[');
+      // The character that marks the end of an IPv6 address within an URI
       const char IPV6_END(']');
+      // The separator of IPv6 sections, e.g. a:b:c:d:e:f:g:h
+      const char IPV6_SEPARATOR(':');
+      // The separator of IPv4 sections, e.g. a.b.c.d
+      const char IPV4_SEPARATOR('.');
+      // The number of maximum fields in the syntax a:b:c:d:e:f:g:h of an IPv6 address
+      const size_t IPV6_SIZE(8);
     } // end of namespace constants
       
 
@@ -97,6 +111,8 @@ namespace {
     using constants::PATH_SEPARATOR;
     using constants::IPV6_START;
     using constants::IPV6_END;
+    using constants::IPV6_SEPARATOR;
+    using constants::IPV4_SEPARATOR;
     using crawler_cpp::utils::hex_to_ushort;
     using crawler_cpp::utils::string_to_upper;
     using crawler_cpp::utils::string_to_lower;
@@ -131,11 +147,99 @@ namespace {
 
 
 
+    string ip_v6_state_1(const string &uri){
+      // TODO: implement
+      return "";
+    }
+
+
+    string ip_v6_state_0(const string &uri, string::const_iterator &uri_pos){
+      const size_t IPV6_SIZE(8);
+      string results[IPV6_SIZE];
+      size_t results_length(0);
+      string current_str;
+      while(uri_pos != uri.end()){
+	// ::
+	if(*uri_pos == IPV6_SEPARATOR && current_str.empty() && results_length < IPV6_SIZE){
+	  results[results_length++] = string() + *uri_pos++;
+        // :
+	} else if(*uri_pos == IPV6_SEPARATOR && results_length < IPV6_SIZE){
+          results[results_length++] = current_str;
+	  current_str = "";
+	  ++uri_pos;
+	// .
+	} else if(*uri_pos == IPV4_SEPARATOR && results_length < IPV6_SIZE){
+	    // TODO
+        // HEXDIGIT or DIGIT
+	} else if(std::find(HEX_DIGIT, HEX_DIGIT + HEX_DIGIT_SIZE, *uri_pos) != HEX_DIGIT + HEX_DIGIT_SIZE
+		  && results_length < IPV6_SIZE){
+	  current_str += *uri_pos++;	  
+	// %xx
+        } else if(*uri_pos == ENCODING_START){
+	  string percentage_result(percentage_state_0(uri, ++uri_pos));
+	  if(percentage_result.length() == 1
+	     && std::find(HEX_DIGIT, HEX_DIGIT + HEX_DIGIT_SIZE, percentage_result[0]) != HEX_DIGIT + HEX_DIGIT_SIZE) {
+	    // TODO: implement
+	  } else if(percentage_result.length() == 1 && percentage_result[0] == IPV6_SEPARATOR) {
+	    // TODO: implement
+	  } else if(percentage_result.length() == 1 && percentage_result[0] == IPV4_SEPARATOR) {
+	    // TODO: implement
+	  } else if(percentage_result.length() == 1 && percentage_result[0] == IPV6_END) {
+	    // TODO: implement
+	  } else {
+	    throw uri_exception("Bad IP v6 address found!", uri);
+	  }
+	// ]
+        } else if(*uri_pos == IPV6_END) {
+          results[results_length++] = current_str;
+          current_str = "";
+	// bad IPv6
+	} else {
+          throw uri_exception("Bad IP v6 address found!", uri);
+	}
+      } // end of while(uri_pos != uri.end())
+
+      string final_result;
+      for(size_t i(0); i != results_length; ++i){
+	if(results[i].length() == 1 && results[i][0] == IPV6_SEPARATOR)
+	  for(size_t j(0); j != IPV6_SIZE + 1 - results_length; ++j) final_result += final_result.empty() ? "0" : ":0";
+	else if(std::find(results[i].begin(), results[i].end(), IPV4_SEPARATOR) != results[i].end())
+	  final_result += string_to_lower(results[i]);
+	else
+	  final_result += final_result.empty() ? final_result[i] : IPV6_SEPARATOR + final_result[i];
+      }
+      return final_result;
+
+
+      // IPv6address = 6( h16 ":" ) ls32
+      //               / "::" 5( h16 ":" ) ls32
+      //               / [h16 ] "::" 4( h16 ":" ) ls32
+      //               / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+      //               / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+      //               / [ *3( h16 ":" ) h16 ] "::"  h16 ":" ls32
+      //               / [ *4( h16 ":" ) h16 ] "::" ls32
+      //               / [ *5( h16 ":" ) h16 ] "::" h16
+      //               / [ *6( h16 ":" ) h16 ] "::"
+        // h16 = 1*4HEXDIG
+        // ls32 = ( h16 ":" h16 )
+        //        / IPv4address
+
+      // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
+      // dec-octet = DIGIT
+      //             / %x31-39 DIGIT
+      //             / "1" 2DIGIT
+      //             / "2" %x30-34 DIGIT
+      //             / "25" %x30-35
+    }
+
+
+
 
 
     void authority_state_0(const string &uri, string::const_iterator &uri_pos,
 			     string &user_info, string &host, string &port){
       if(*uri_pos == IPV6_START){
+	ip_v6_state_0(uri, ++uri_pos);
 	// TODO: ipv 6
       } else if(*uri_pos == ENCODING_START) {
 	// TODO: %..
@@ -161,32 +265,6 @@ namespace {
 
 
     }
-
-    string ip_v6_state_0(const string &uri, string::const_iterator &uri_pos){
-      return "";
-
-
-      // IPv6address = 6( h16 ":" ) ls32
-      //               / "::" 5( h16 ":" ) ls32
-      //               / [h16 ] "::" 4( h16 ":" ) ls32
-      //               / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
-      //               / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
-      //               / [ *3( h16 ":" ) h16 ] "::"  h16 ":" ls32
-      //               / [ *4( h16 ":" ) h16 ] "::" ls32
-      //               / [ *5( h16 ":" ) h16 ] "::" h16
-      //               / [ *6( h16 ":" ) h16 ] "::"
-        // h16 = 1*4HEXDIG
-        // ls32 = ( h16 ":" h16 )
-        //        / IPv4address
-
-      // IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
-      // dec-octet = DIGIT
-      //             / %x31-39 DIGIT
-      //             / "1" 2DIGIT
-      //             / "2" %x30-34 DIGIT
-      //             / "25" %x30-35
-    }
-
 
     string query_state_0(const string &uri, string::const_iterator &uri_pos){
       return "";
@@ -280,14 +358,15 @@ characters ("//")
       if(std::find(ALPHA, ALPHA + ALPHA_SIZE, *uri_pos) != ALPHA + ALPHA_SIZE ||
 	 std::find(DIGIT, DIGIT + DIGIT_SIZE, *uri_pos) != DIGIT + DIGIT_SIZE ||
 	 '+' == *uri_pos || '-' == *uri_pos || '.' == *uri_pos){
-	return scheme_state_1(uri, ++uri_pos, built_scheme + static_cast<char>(std::tolower(*uri_pos)));
+	char c(std::tolower(*uri_pos));
+	return scheme_state_1(uri, ++uri_pos, built_scheme + c);
       }else if(*uri_pos == SCHEME_END){
 	return built_scheme;
       }else if(*uri_pos == ENCODING_START){
 	string percentage_result(string_to_lower(percentage_state_0(uri, ++uri_pos)));
 	if(percentage_result.length() == 1) return scheme_state_1(uri, uri_pos, built_scheme + percentage_result);
 	else throw uri_exception("The scheme part of an URI must contain only alphanumerical characters and the\
- characters '+', '-' and '.'!", uri);;
+ characters '+', '-' and '.'!", uri);
       }else{
 	throw uri_exception("The scheme part of an URI must contain only alphanumerical characters and the characters\
  '+', '-' and '.'!", uri);
@@ -298,7 +377,8 @@ characters ("//")
     string scheme_state_0(const string &uri, string::const_iterator &uri_pos){
       if(uri_pos == uri.end()) throw uri_exception("Empty URI!", uri);
       if(std::find(ALPHA, ALPHA + ALPHA_SIZE, *uri_pos) != ALPHA + ALPHA_SIZE){
-	return scheme_state_1(uri, ++uri_pos, string() + char(std::tolower(*uri_pos)));
+	char c(std::tolower(*uri_pos));
+	return scheme_state_1(uri, ++uri_pos, string() + c);
       }else if(*uri_pos == ENCODING_START){
 	string percentage_result(string_to_lower(percentage_state_0(uri, ++uri_pos)));
 	if(percentage_result.length() == 1) return scheme_state_1(uri, uri_pos, percentage_result);
