@@ -32,7 +32,7 @@ init:
 .PHONY: clean
 clean:
 	if [ -d $(bin_folder) ] && [ "$$(ls $(bin_folder)/*)" ]; then rm $(bin_folder)/*; fi
-	if [ -d $(lib_folder) ] && [ "$$(ls $(lib_folder)/*)" ]; then rm -r $(lib_folder); fi
+#	if [ -d $(lib_folder) ] && [ "$$(ls $(lib_folder)/*)" ]; then rm $(lib_folder)/*; fi
 	if [ -d $(odb_folder) ] && [ "$$(ls $(odb_folder)/*)" ]; then rm -r $(odb_folder); fi
 	if [ -d $(obj_folder) ] && [ "$$(ls $(obj_folder)/*)" ]; then rm -r $(obj_folder); fi
 	if [ -d $(test_folder) ] && [ "$$(ls $(test_folder)/*)" ]; then rm -r $(test_folder); fi
