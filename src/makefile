@@ -20,6 +20,19 @@ $(obj_folder)/utils.o: utils.cpp $(header_folder)/utils.h $(obj_folder)/exceptio
 $(obj_folder)/exceptions.o: exceptions.cpp $(header_folder)/exceptions.h
 	g++ -Wall -fPIC -c exceptions.cpp -o $(obj_folder)/exceptions.o -std=c++11 -I$(header_folder)
 
+# This target ist thought only for manually creating all sub directories
+.PHONY: init
+init:
+	mkdir -p $(bin_folder)
+	mkdir -p $(lib_folder)
+	mkdir -p $(odb_folder)
+	mkdir -p $(obj_folder)
+	mkdir -p $(test_folder)
+
 .PHONY: clean
 clean:
-	rm $(bin_folder)/* $(lib_folder)/* $(odb_folder)/* $(obj_folder)/*
+	if [ -d $(bin_folder) ] && [ "$$(ls $(bin_folder)/*)" ]; then rm $(bin_folder)/*; fi
+	if [ -d $(lib_folder) ] && [ "$$(ls $(lib_folder)/*)" ]; then rm -r $(lib_folder); fi
+	if [ -d $(odb_folder) ] && [ "$$(ls $(odb_folder)/*)" ]; then rm -r $(odb_folder); fi
+	if [ -d $(obj_folder) ] && [ "$$(ls $(obj_folder)/*)" ]; then rm -r $(obj_folder); fi
+	if [ -d $(test_folder) ] && [ "$$(ls $(test_folder)/*)" ]; then rm -r $(test_folder); fi
