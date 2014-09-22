@@ -13,16 +13,6 @@
 #include "utils.h"
 
 using std::string;
-using std::hex;
-using std::stringstream;
-
-unsigned short crawler_cpp::utils::hex_to_ushort(const string &hex_str){
-  unsigned short x;   
-  stringstream ss;
-  ss << hex << hex_str;
-  ss >> x;
-  return x;
-}
 
 string crawler_cpp::utils::string_to_lower(const string &str){
   string result(str);

@@ -14,17 +14,11 @@
 #define UTILS_H
 
 #include <cctype>
-#include <sstream>
 #include <algorithm>
 #include <string>
 
 namespace crawler_cpp {
   namespace utils {
-    // Transforms tha passed string to an unsigned short.
-    // Note: the base is 16 (i.e. hex)
-    // Note: no prefix such as 0x is required
-    unsigned short hex_to_ushort(const std::string&);
-
     // Transforms all characters of the passed string to lower case.
     std::string string_to_lower(const std::string&);
 

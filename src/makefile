@@ -31,8 +31,8 @@ init:
 
 .PHONY: clean
 clean:
-	if [ -d $(bin_folder) ] && [ "$$(ls $(bin_folder)/*)" ]; then rm $(bin_folder)/*; fi
-#	if [ -d $(lib_folder) ] && [ "$$(ls $(lib_folder)/*)" ]; then rm $(lib_folder)/*; fi
-	if [ -d $(odb_folder) ] && [ "$$(ls $(odb_folder)/*)" ]; then rm -r $(odb_folder); fi
-	if [ -d $(obj_folder) ] && [ "$$(ls $(obj_folder)/*)" ]; then rm -r $(obj_folder); fi
-	if [ -d $(test_folder) ] && [ "$$(ls $(test_folder)/*)" ]; then rm -r $(test_folder); fi
+	@(rm $(bin_folder)/* 2> /dev/null && echo "rm $(bin_folder)/*") || true
+#	@(rm $(lib_folder)/* 2> /dev/null && echo "rm $(lib_folder)/*") || true
+	@(rm $(odb_folder)/* 2> /dev/null && echo "rm $(odb_folder)/*") || true
+	@(rm $(obj_folder)/* 2> /dev/null && echo "rm $(obj_folder)/*") || true
+	@(rm $(test_folder)/* 2> /dev/null && echo "rm $(test_folder)/*") || true
