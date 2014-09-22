@@ -16,8 +16,7 @@ This code is distributed under the ["GNU LESSER GENERAL PUBLIC LICENSE" (LGPL)]
 * Run git submodule init
 * Run git submodule update
 * Got to src/lib/cpp-netlib
-* Build cpp-netib (see: documentatio at https://github.com/cpp-netlib/
-cpp-netlib)
+* Build cpp-netib (see: https://github.com/cpp-netlib/cpp-netlib)
 * Go to the crawlerpp/src folder
 * Run make
 
