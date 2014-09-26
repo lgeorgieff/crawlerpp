@@ -1,4 +1,13 @@
 #################
+## own rules
+#################
+src/test
+src/obj
+src/odb
+src/bin
+src/lib
+
+#################
 ## Eclipse
 #################
 

@@ -4,12 +4,13 @@
 A configurable web crawler library written in C++
 
 ##Licence Terms
-This code is distributed under the ["GNU LESSER GENERAL PUBLIC LICENSE" (LGPL)]
-(http://www.gnu.org/licenses/lgpl.html).
+This code is distributed under the ["GNU LESSER GENERAL PUBLIC LICENSE" (LGPL)] (http://www.gnu.org/licenses/lgpl.html).
 
 ##Prerequisites
-* gcc
-* GNU make
+* g++ (gcc) (https://gcc.gnu.org/)
+* GNU make (http://www.gnu.org/software/make/)
+* PostgreSQL (http://www.postgresql.org/)
+* ODB (http://www.codesynthesis.com/products/odb/)
 
 ##Install
 * Go to the crawlerpp folder (the root folder of the crawlerpp repository).
@@ -25,3 +26,8 @@ This code is distributed under the ["GNU LESSER GENERAL PUBLIC LICENSE" (LGPL)]
 
 ##Documentation
 ...
+
+##Useful information
+* http://wiki.ubuntuusers.de/PostgreSQL (PostgreSQL on Ubuntu)
+* https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-14-04 (PostgreSQL on Ubuntu)
+* http://www.codesynthesis.com/products/odb/doc/install-unix.xhtml (Installing ODB on Linux)

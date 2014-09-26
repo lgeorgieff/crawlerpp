@@ -16,6 +16,9 @@ $(obj_folder)/uri.o: uri.cpp uri.h $(obj_folder)/exceptions.o $(obj_folder)/exce
 $(obj_folder)/utils.o: utils.cpp utils.h $(obj_folder)/exceptions.o
 	g++ -Wall -fPIC -c utils.cpp -o $(obj_folder)/utils.o -std=c++11
 
+$(odb_folder)/uri_odb_files: utils.h $(obj_folder)/exceptions.o
+	odb --database pgsql --generat-query --generate-schema --output-dir $(odb_folder) uri.h
+
 $(obj_folder)/exceptions.o: exceptions.cpp exceptions.h
 	g++ -Wall -fPIC -c exceptions.cpp -o $(obj_folder)/exceptions.o -std=c++11
 
