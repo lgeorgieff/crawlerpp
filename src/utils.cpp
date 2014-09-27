@@ -1,14 +1,14 @@
-// ====================================================================================================================
+// ============================================================================
 // Author: Lukas Georgieff
 // File: utils.cpp
-// Description: This implementation file contains al definitions of utility functions reequried for crawler_cpp.
+// Description: This implementation file contains al definitions of utility
+//              functions reequried for crawler_cpp.
 // Public interfaces:
 //   *hex_to_ushort
 //   *string_to_lower
 //   *string_to_upper
 //   *merge_arrays
-// Modification 09/04/2014: Creation of this file
-// ====================================================================================================================
+// ============================================================================
 
 #include "utils.h"
 

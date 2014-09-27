@@ -1,11 +1,20 @@
-#include "uri.h"
+// ============================================================================
+// Author: Lukas Georgieff
+// File: uri.cpp
+// Description: This file contains several funcitons for testing the library.
+// Public interfaces:
+//   * int main()
+// ============================================================================
+
+#include "odb/uri-odb.hxx"
 
 #include <network/uri.hpp>
-
 #include <iostream>
+#include <string>
 
 using std::cout;
 using std::endl;
+using std::string;
 
 int main(){
   cout << endl;
@@ -17,5 +26,6 @@ int main(){
        << "path: " << instance.path().get() << endl;
 
   cout << "leaving tests.main" << endl << endl;
+
   return 0;
 }

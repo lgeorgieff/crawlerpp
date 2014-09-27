@@ -12,7 +12,7 @@ This code is distributed under the ["GNU LESSER GENERAL PUBLIC LICENSE" (LGPL)] 
 * PostgreSQL (http://www.postgresql.org/)
 * ODB (http://www.codesynthesis.com/products/odb/)
 
-##Install
+##Installation
 * Go to the crawlerpp folder (the root folder of the crawlerpp repository).
 * Run git submodule init
 * Run git submodule update

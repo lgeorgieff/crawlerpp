@@ -1,4 +1,4 @@
-// ====================================================================================================================
+// ============================================================================
 // Author: Lukas Georgieff
 // File: exceptions.h
 // Description: This header file defines all exceptions used by the crawlercpp
@@ -7,8 +7,7 @@
 //   *exception
 //   *uri_exception
 //   *not_implemented_exception
-// Modification 08/15/2014: Definition of the classes exception, uri_exception and not_implemented_exception.
-// ====================================================================================================================
+// ============================================================================
 
 
 #ifndef EXCEPTIONS_H
