@@ -16,7 +16,8 @@
 #include "uri.h"
 #include "exceptions.h"
 
-#include <utility> // std::move
+// std::move
+#include <utility>
 #include <cassert>
 
 using std::string;
@@ -61,6 +62,8 @@ bool crawler_cpp::data::uri::is_known(std::string uri){
   // TODO: implement
   throw crawler_cpp::exceptions::not_implemented_exception();
 }
+
+crawler_cpp::data::uri::~uri() {}
 
 // ============================================================================
 // === the waiting_uri class ==================================================
@@ -108,6 +111,8 @@ bool crawler_cpp::data::waiting_uri::has_next(){
   throw crawler_cpp::exceptions::not_implemented_exception();
 }
 
+crawler_cpp::data::waiting_uri::~waiting_uri() {}
+
 // ============================================================================
 // === the visited_uri class ==================================================
 // ============================================================================
@@ -135,6 +140,8 @@ crawler_cpp::data::visited_uri&
   this->uri_ = std::move(uri.uri_);
   return *this;
 }
+
+crawler_cpp::data::visited_uri::~visited_uri() {}
 
 #include "uri.h"
 

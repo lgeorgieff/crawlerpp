@@ -30,6 +30,7 @@ namespace crawler_cpp {
       template<typename T> static bool is_known(std::string);
       uri& operator=(const uri&);
       std::string get_uri() const;
+      virtual ~uri();
       friend class odb::access;
     protected:
       // The default constructor is required by odb
@@ -50,6 +51,7 @@ namespace crawler_cpp {
       virtual bool persist();
       static waiting_uri get_next();
       static bool has_next();
+      virtual ~waiting_uri();
       friend class odb::access;
     protected:
       // The default constructor is required by odb
@@ -66,6 +68,7 @@ namespace crawler_cpp {
       visited_uri& operator=(const visited_uri&);
       visited_uri& operator=(visited_uri&&);
       virtual bool persist();
+      virtual ~visited_uri();
       friend class odb::access;
     protected:
       // The default constructor is required by odb

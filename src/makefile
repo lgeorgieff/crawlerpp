@@ -7,17 +7,17 @@ test_folder = ./test
 $(test_folder)/tests: tests.cpp $(bin_folder)/libcrawler_cpp.so
 	g++ -Wall tests.cpp -L$(bin_folder) -lcrawler_cpp -lboost_system -Wl,-rpath,$(bin_folder) -o $(test_folder)/tests -lnetwork-uri -std=c++11
 
-$(bin_folder)/libcrawler_cpp.so: $(obj_folder)/uri.o $(obj_folder)/exceptions.o $(obj_folder)/utils.o $(bin_folder)/uri-odb.o
-	g++ -Wall -fPIC -shared $(obj_folder)/uri.o $(obj_folder)/utils.o  $(obj_folder)/exceptions.o $(obj_folder)/uri-odb.o -o $(bin_folder)/libcrawler_cpp.so -std=c++11
+$(bin_folder)/libcrawler_cpp.so: $(obj_folder)/uri.o $(obj_folder)/exceptions.o $(obj_folder)/utils.o $(bin_folder)/uri.odb.o
+	g++ -Wall -fPIC -shared $(obj_folder)/uri.o $(obj_folder)/utils.o  $(obj_folder)/exceptions.o $(obj_folder)/uri.odb.o -o $(bin_folder)/libcrawler_cpp.so -std=c++11
 
 $(obj_folder)/uri.o: uri.cpp uri.h $(obj_folder)/exceptions.o $(obj_folder)/exceptions.o
 	g++ -Wall -fPIC -c uri.cpp -o $(obj_folder)/uri.o -std=c++11
 
-$(bin_folder)/uri-odb.o: $(odb_folder)/uri_odb_files uri_odb_pragma.h
-	g++ -Wall -fPIC -c $(odb_folder)/uri-odb.cxx -o $(obj_folder)/uri-odb.o -std=c++11
+$(bin_folder)/uri.odb.o: $(odb_folder)/uri_odb_files uri_odb_pragma.h
+	g++ -Wall -fPIC -c $(odb_folder)/uri.odb.cpp -o $(obj_folder)/uri.odb.o -std=c++11
 
 $(odb_folder)/uri_odb_files: $(obj_folder)/utils.o $(obj_folder)/exceptions.o
-	odb --database pgsql --generate-query --generate-schema --output-dir $(odb_folder) --std c++11 uri.h
+	odb --database pgsql --generate-query --generate-schema --output-dir $(odb_folder) --std c++11 --odb-file-suffix ".odb" --hxx-suffix ".h" --cxx-suffix ".cpp" --ixx-suffix ".i" uri.h
 	@(if [ ! -e $(odb_folder)/uri.h ]; then ln -s ../uri.h $(odb_folder)/uri.h; fi) && echo "ln -s ../uri.h $(odb_folder)/uri.h"
 
 $(obj_folder)/utils.o: utils.cpp utils.h $(obj_folder)/exceptions.o

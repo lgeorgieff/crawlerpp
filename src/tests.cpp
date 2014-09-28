@@ -6,7 +6,7 @@
 //   * int main()
 // ============================================================================
 
-#include "odb/uri-odb.hxx"
+#include "odb/uri.odb.h"
 
 #include <network/uri.hpp>
 #include <iostream>
