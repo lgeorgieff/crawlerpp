@@ -16,6 +16,9 @@
 #include "uri.h"
 #include "exceptions.h"
 
+#include <utility> // std::move
+#include <cassert>
+
 using std::string;
 
 // ============================================================================
@@ -82,6 +85,10 @@ crawler_cpp::data::waiting_uri&
 
 crawler_cpp::data::waiting_uri&
   crawler_cpp::data::waiting_uri::operator=(crawler_cpp::data::waiting_uri&& uri){
+  // We can abort the execution, since this must be a serious error caused by
+  // the user of this code when performing a self-assignment in the move
+  // assignment operator
+  assert(this != &uri);
   this->uri_ = std::move(uri.uri_);
   return *this;
 }
@@ -121,6 +128,10 @@ crawler_cpp::data::visited_uri&
 
 crawler_cpp::data::visited_uri&
   crawler_cpp::data::visited_uri::operator=(crawler_cpp::data::visited_uri&& uri){
+  // We can abort the execution, since this must be a serious error caused by
+  // the user of this code when performing a self-assignment in the move
+  // assignment operator
+  assert(this != &uri);
   this->uri_ = std::move(uri.uri_);
   return *this;
 }
