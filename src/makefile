@@ -13,7 +13,7 @@ $(bin_folder)/libcrawler_cpp.so: $(obj_folder)/uri.o $(obj_folder)/exceptions.o 
 $(obj_folder)/uri.o: uri.cpp uri.h $(obj_folder)/exceptions.o $(obj_folder)/exceptions.o
 	g++ -Wall -fPIC -c uri.cpp -o $(obj_folder)/uri.o -std=c++11
 
-$(bin_folder)/uri.odb.o: $(odb_folder)/uri_odb_files uri_odb_pragma.h
+$(bin_folder)/uri.odb.o: $(odb_folder)/uri_odb_files uri.pragma.h
 	g++ -Wall -fPIC -c $(odb_folder)/uri.odb.cpp -o $(obj_folder)/uri.odb.o -std=c++11
 
 $(odb_folder)/uri_odb_files: $(obj_folder)/utils.o $(obj_folder)/exceptions.o
@@ -25,8 +25,6 @@ $(obj_folder)/utils.o: utils.cpp utils.h $(obj_folder)/exceptions.o
 
 $(obj_folder)/exceptions.o: exceptions.cpp exceptions.h
 	g++ -Wall -fPIC -c exceptions.cpp -o $(obj_folder)/exceptions.o -std=c++11
-
-
 
 # This target ist thought only for manually creating all sub directories
 .PHONY: init
