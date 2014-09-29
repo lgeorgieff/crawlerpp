@@ -15,30 +15,35 @@
 
 #include "uri.h"
 #include "exceptions.h"
+#include "utils.h"
 
 // std::move
 #include <utility>
 #include <cassert>
+#include <exception>
+#include <network/uri.hpp>
+#include <iostream>
 
 using std::string;
+using crawler_pp::exceptions::uri_exception;
 
 // ============================================================================
 // === the uri class ==========================================================
 // ============================================================================
-const size_t crawler_cpp::data::uri::MAX_SIZE = 2048;
+const size_t crawler_pp::data::uri::MAX_SIZE = 2048;
 
-crawler_cpp::data::uri::uri() :value_("") {}
+crawler_pp::data::uri::uri() :value_("") {}
 
-crawler_cpp::data::uri::uri(string uri){
+crawler_pp::data::uri::uri(string uri){
   this->set_value(uri);
 }
 
-crawler_cpp::data::uri::uri(const crawler_cpp::data::uri& uri){
+crawler_pp::data::uri::uri(const crawler_pp::data::uri& uri){
   // self-assignment is OK
   this->value_ = uri.get_value();
 }
 
-crawler_cpp::data::uri::uri(crawler_cpp::data::uri&& uri) {
+crawler_pp::data::uri::uri(crawler_pp::data::uri&& uri) {
   // We can abort the execution, since this must be a serious error caused by
   // the user of this code when performing a self-assignment in the move
   // assignment operator
@@ -46,13 +51,13 @@ crawler_cpp::data::uri::uri(crawler_cpp::data::uri&& uri) {
   this->value_ = std::move(uri.value_);
 }
 
-crawler_cpp::data::uri& crawler_cpp::data::uri::operator=(const crawler_cpp::data::uri& uri){
+crawler_pp::data::uri& crawler_pp::data::uri::operator=(const crawler_pp::data::uri& uri){
   // self-assignment is OK
   this->value_ = uri.get_value();
   return *this;
 }
 
-crawler_cpp::data::uri& crawler_cpp::data::uri::operator=(crawler_cpp::data::uri&& uri){
+crawler_pp::data::uri& crawler_pp::data::uri::operator=(crawler_pp::data::uri&& uri){
   // We can abort the execution, since this must be a serious error caused by
   // the user of this code when performing a self-assignment in the move
   // assignment operator
@@ -61,113 +66,130 @@ crawler_cpp::data::uri& crawler_cpp::data::uri::operator=(crawler_cpp::data::uri
   return *this;
 }
 
-bool crawler_cpp::data::uri::operator==(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator==(const crawler_pp::data::uri &uri) const {
   return !this->compare(uri);
 }
 
-bool crawler_cpp::data::uri::operator==(const std::string &uri) const {
+bool crawler_pp::data::uri::operator==(const std::string &uri) const {
   return !this->compare(uri);
 }
 
-bool crawler_cpp::data::uri::operator!=(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator!=(const crawler_pp::data::uri &uri) const {
   return !(*this == uri);
 }
 
-bool crawler_cpp::data::uri::operator!=(const std::string &uri) const {
+bool crawler_pp::data::uri::operator!=(const std::string &uri) const {
   return !(*this == uri);
 }
 
-bool crawler_cpp::data::uri::operator<(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator<(const crawler_pp::data::uri &uri) const {
   return this->compare(uri) < 0;
 }
 
-bool crawler_cpp::data::uri::operator<(const std::string &uri) const {
+bool crawler_pp::data::uri::operator<(const std::string &uri) const {
   return this->compare(uri) < 0;
 }
 
-bool crawler_cpp::data::uri::operator>(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator>(const crawler_pp::data::uri &uri) const {
   return this->compare(uri) > 0;
 }
 
-bool crawler_cpp::data::uri::operator>(const std::string &uri) const {
+bool crawler_pp::data::uri::operator>(const std::string &uri) const {
   return this->compare(uri) > 0;
 }
 
-bool crawler_cpp::data::uri::operator<=(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator<=(const crawler_pp::data::uri &uri) const {
   return this->compare(uri) <= 0;
 }
 
-bool crawler_cpp::data::uri::operator<=(const std::string &uri) const {
+bool crawler_pp::data::uri::operator<=(const std::string &uri) const {
   return this->compare(uri) <= 0;
 }
 
-bool crawler_cpp::data::uri::operator>=(const crawler_cpp::data::uri &uri) const {
+bool crawler_pp::data::uri::operator>=(const crawler_pp::data::uri &uri) const {
   return this->compare(uri) >= 0;
 }
 
-bool crawler_cpp::data::uri::operator>=(const std::string &uri) const {
+bool crawler_pp::data::uri::operator>=(const std::string &uri) const {
   return this->compare(uri) >= 0;
 }
 
-size_t crawler_cpp::data::uri::size() const {
+size_t crawler_pp::data::uri::size() const {
   return this->get_value().size();
 }
 
-int crawler_cpp::data::uri::compare(const crawler_cpp::data::uri& uri) const {
+int crawler_pp::data::uri::compare(const crawler_pp::data::uri& uri) const {
   return this->get_value().compare(uri.get_value());
 }
 
-int crawler_cpp::data::uri::compare(string uri) const {
+int crawler_pp::data::uri::compare(string uri) const {
   // TODO: implement
   // TODO: do an URI normalization on the passed string
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-string crawler_cpp::data::uri::get_value() const {
+string crawler_pp::data::uri::get_value() const {
   return this->value_;
 }
 
-void crawler_cpp::data::uri::set_value(string uri){
-  // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+void crawler_pp::data::uri::set_value(string uri){
+  try {
+    network::uri tmp(uri);
+
+    // TODO: normalization
+    //throw crawler_pp::exceptions::not_implemented_exception();
+
+    // TODO: check length (min and max)
+
+    this->value_ = crawler_pp::utils::to_string<network::uri>(tmp);
+  } catch(std::exception& e){
+    throw uri_exception(e.what(), uri);
+  } catch(...) {
+    throw uri_exception("Could not create uri from string!", uri);
+  }
 }
 
 template<typename T>
-bool crawler_cpp::data::uri::is_known(const crawler_cpp::data::uri& uri){
-  return crawler_cpp::data::uri::is_known<T>(uri.get_value());
+bool crawler_pp::data::uri::is_known(const crawler_pp::data::uri& uri){
+  return crawler_pp::data::uri::is_known<T>(uri.get_value());
 }
 
 template<typename T>
-bool crawler_cpp::data::uri::is_known(std::string uri){
+bool crawler_pp::data::uri::is_known(std::string uri){
   // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-crawler_cpp::data::uri::~uri() {}
+crawler_pp::data::uri::~uri() {}
+
+std::ostream& crawler_pp::data::operator<<(std::ostream &os, const crawler_pp::data::uri &uri){
+  os << uri.get_value();
+  return os;
+}
 
 // ============================================================================
 // === the waiting_uri class ==================================================
 // ============================================================================
-crawler_cpp::data::waiting_uri::waiting_uri() :crawler_cpp::data::uri() {}
+crawler_pp::data::waiting_uri::waiting_uri() :crawler_pp::data::uri() {}
 
-crawler_cpp::data::waiting_uri::waiting_uri(string uri)
-  :crawler_cpp::data::uri(uri) {}
+crawler_pp::data::waiting_uri::waiting_uri(string uri)
+  :crawler_pp::data::uri(uri) {}
 
-crawler_cpp::data::waiting_uri::waiting_uri(const crawler_cpp::data::waiting_uri &uri)
-  :crawler_cpp::data::uri(uri) {}
+crawler_pp::data::waiting_uri::waiting_uri(const crawler_pp::data::waiting_uri &uri)
+  :crawler_pp::data::uri(uri) {}
 
-crawler_cpp::data::waiting_uri::waiting_uri(crawler_cpp::data::waiting_uri &&uri)
-  :crawler_cpp::data::uri(std::move(uri.value_)) {}
+crawler_pp::data::waiting_uri::waiting_uri(crawler_pp::data::waiting_uri &&uri)
+  :crawler_pp::data::uri(std::move(uri.value_)) {}
 
-crawler_cpp::data::waiting_uri&
-  crawler_cpp::data::waiting_uri::operator=(const crawler_cpp::data::waiting_uri &uri){
+crawler_pp::data::waiting_uri&
+  crawler_pp::data::waiting_uri::operator=(const crawler_pp::data::waiting_uri &uri){
   // self-assignment is OK
   this->value_ = uri.get_value();
   return *this;
 }
 
-crawler_cpp::data::waiting_uri&
-  crawler_cpp::data::waiting_uri::operator=(crawler_cpp::data::waiting_uri&& uri){
+crawler_pp::data::waiting_uri&
+  crawler_pp::data::waiting_uri::operator=(crawler_pp::data::waiting_uri&& uri){
   // We can abort the execution, since this must be a serious error caused by
   // the user of this code when performing a self-assignment in the move
   // assignment operator
@@ -176,44 +198,44 @@ crawler_cpp::data::waiting_uri&
   return *this;
 }
 
-bool crawler_cpp::data::waiting_uri::persist() {
+bool crawler_pp::data::waiting_uri::persist() {
   // TOOD: throw db_exception if an error occurs
   // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-crawler_cpp::data::waiting_uri crawler_cpp::data::waiting_uri::get_next(){
+crawler_pp::data::waiting_uri crawler_pp::data::waiting_uri::get_next(){
   // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-bool crawler_cpp::data::waiting_uri::has_next(){
+bool crawler_pp::data::waiting_uri::has_next(){
   // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-crawler_cpp::data::waiting_uri::~waiting_uri() {}
+crawler_pp::data::waiting_uri::~waiting_uri() {}
 
 // ============================================================================
 // === the visited_uri class ==================================================
 // ============================================================================
-crawler_cpp::data::visited_uri::visited_uri() :crawler_cpp::data::uri() {}
+crawler_pp::data::visited_uri::visited_uri() :crawler_pp::data::uri() {}
 
-crawler_cpp::data::visited_uri::visited_uri(string uri)
-  :crawler_cpp::data::uri(uri) {}
+crawler_pp::data::visited_uri::visited_uri(string uri)
+  :crawler_pp::data::uri(uri) {}
 
-crawler_cpp::data::visited_uri::visited_uri(const crawler_cpp::data::visited_uri &uri)
-  :crawler_cpp::data::visited_uri(uri.get_value()) {}
+crawler_pp::data::visited_uri::visited_uri(const crawler_pp::data::visited_uri &uri)
+  :crawler_pp::data::visited_uri(uri.get_value()) {}
 
-crawler_cpp::data::visited_uri&
-  crawler_cpp::data::visited_uri::operator=(const crawler_cpp::data::visited_uri& uri){
+crawler_pp::data::visited_uri&
+  crawler_pp::data::visited_uri::operator=(const crawler_pp::data::visited_uri& uri){
   // self-assignment is OK
   this->value_ = uri.get_value();
   return *this;
 }
 
-crawler_cpp::data::visited_uri&
-  crawler_cpp::data::visited_uri::operator=(crawler_cpp::data::visited_uri&& uri){
+crawler_pp::data::visited_uri&
+  crawler_pp::data::visited_uri::operator=(crawler_pp::data::visited_uri&& uri){
   // We can abort the execution, since this must be a serious error caused by
   // the user of this code when performing a self-assignment in the move
   // assignment operator
@@ -222,13 +244,13 @@ crawler_cpp::data::visited_uri&
   return *this;
 }
 
-bool crawler_cpp::data::visited_uri::persist(){
+bool crawler_pp::data::visited_uri::persist(){
   // TOOD: throw db_exception if an error occurs
   // TODO: implement
-  throw crawler_cpp::exceptions::not_implemented_exception();
+  throw crawler_pp::exceptions::not_implemented_exception();
 }
 
-crawler_cpp::data::visited_uri::~visited_uri() {}
+crawler_pp::data::visited_uri::~visited_uri() {}
 
 #include "uri.h"
 

@@ -16,8 +16,9 @@
 #include <odb/core.hxx> 
 
 #include <string>
+#include <iostream>
 
-namespace crawler_cpp {
+namespace crawler_pp {
   namespace data {
 
     // This class represents the base type for all uri classes
@@ -42,7 +43,7 @@ namespace crawler_cpp {
       // is true.
       // If the the value was not stored, since the same URI already existed in
       // the DB, the return value is false.
-      // If any error occurrs the crawler_cpp::excpetions::db_exception is
+      // If any error occurrs the crawler_pp::excpetions::db_exception is
       // thrown.
       virtual bool persist() = 0;
       // Returns true if the passed uri is already known, i.e. stored in the DB
@@ -149,10 +150,10 @@ namespace crawler_cpp {
       waiting_uri& operator=(const waiting_uri&);
       // The move assignment operator for the waiting_uri class.
       waiting_uri& operator=(waiting_uri&&);
-      // See: crawler_cpp::data::uri::persist
+      // See: crawler_pp::data::uri::persist
       virtual bool persist();
       // Returns the next waiting_uri instance from the DB. If not one exists
-      // in the DB, the crawler_cpp::exceptions::db_exception is thrown
+      // in the DB, the crawler_pp::exceptions::db_exception is thrown
       static waiting_uri get_next();
       // Returns true if a waiting_uri exists in the DB. Otherwise false is
       // returned.
@@ -184,7 +185,7 @@ namespace crawler_cpp {
       visited_uri& operator=(const visited_uri&);
       // The move assignment operator for the visited_uri class.
       visited_uri& operator=(visited_uri&&);
-      // see: crawler_cpp::data::uri::persist
+      // see: crawler_pp::data::uri::persist
       virtual bool persist();
       // The destructor of this class - there is nothig todo here
       ~visited_uri();
@@ -195,8 +196,11 @@ namespace crawler_cpp {
       // The default constructor is required by odb
       visited_uri();
     }; // end of class visited_uri
+
+    // Writes the passed uri instance to the given ostream.
+    std::ostream& operator<<(std::ostream&, const uri&);
   } // end of namespace data
-} // end of namespace crawler_cpp
+} // end of namespace crawler_pp
 
 
 // Include the ODB pragmas for persisting the uri classes
