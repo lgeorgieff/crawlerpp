@@ -23,14 +23,25 @@
 #include <exception>
 #include <network/uri.hpp>
 #include <iostream>
+#include <vector>
 
 using std::string;
+using std::vector;
 using crawler_pp::exceptions::uri_exception;
 
 // ============================================================================
 // === the uri class ==========================================================
 // ============================================================================
-const size_t crawler_pp::data::uri::MAX_SIZE = 2048;
+const size_t crawler_pp::data::uri::MAX_SIZE(2048);
+
+const string crawler_pp::data::uri::SCHEME_HTTP("http");
+
+const string crawler_pp::data::uri::SCHEME_HTTPS("https");
+
+const vector<string> crawler_pp::data::uri::SUPPORTED_SCHEMES {
+  crawler_pp::data::uri::SCHEME_HTTP,
+  crawler_pp::data::uri::SCHEME_HTTPS
+};
 
 crawler_pp::data::uri::uri() :value_("") {}
 
@@ -134,12 +145,19 @@ string crawler_pp::data::uri::get_value() const {
 
 void crawler_pp::data::uri::set_value(string uri){
   try {
-    network::uri tmp(uri);
+    network::uri tmp(network::uri(uri).normalize(network::uri_comparison_level::syntax_based));
+    if(!tmp.is_absolute() || tmp.empty())
+      throw uri_exception("Uri must be absolute!", uri);
+    if(crawler_pp::utils::to_string<network::uri>(tmp).size() > crawler_pp::data::uri::MAX_SIZE)
+      throw uri_exception("Uri must be shorter or equal to " + std::to_string(MAX_SIZE) +
+			  " characters!", uri);
+    if(std::find(SUPPORTED_SCHEMES.begin(), SUPPORTED_SCHEMES.end(), tmp.scheme().get()) ==
+       SUPPORTED_SCHEMES.end())
+      throw uri_exception("The scheme " + static_cast<string>(tmp.scheme().get()) +
+			  " is not supported!", uri);
 
-    // TODO: normalization
-    //throw crawler_pp::exceptions::not_implemented_exception();
-
-    // TODO: check length (min and max)
+    // TODO: always set a port (default port, :, ...)
+    // TODO: add asserts to test.cpp::main
 
     this->value_ = crawler_pp::utils::to_string<network::uri>(tmp);
   } catch(std::exception& e){

@@ -16,6 +16,8 @@
 #include <iostream>
 #include <string>
 
+#include "exceptions.h" // TOOD: remove
+
 using std::cout;
 using std::endl;
 using std::string;
@@ -24,15 +26,52 @@ int main(){
   cout << "entering tests.main" << endl;
   cout << "===============================================================================" << endl;
 
-  crawler_pp::data::waiting_uri uri_0("http://www.sueddeutsche.de");
-  cout << "uri_0: _" << uri_0 << "_" << endl;
-  crawler_pp::data::waiting_uri uri_1("http://www.sueddEutsche.de/any//path#fragment");
-  cout << "uri_1: _" << uri_1 << "_" << endl;
-  crawler_pp::data::waiting_uri uri_2("http://www.sueddeutsche.de//any/path#fragment#invalid");
-  cout << "uri_2: _" << uri_2 << "_" << endl;
-  crawler_pp::data::waiting_uri uri_3("");
-  cout << "uri_3: _" << uri_3 << "_" << endl;
+  {
+    crawler_pp::data::waiting_uri uri("http://www.sueddeutsche.de");
+    cout << "0: _" << uri << "_" << endl;
+  }
+  {
+    crawler_pp::data::waiting_uri uri("http://www.sueddEutsche.de/any/../pAth#fragment?");
+    cout << "1: _" << uri << "_" << endl;
+  }
+  try{
+    crawler_pp::data::waiting_uri uri("http://www.sueddeutsche.de/../any/path#fragment#invalid");
+    cout << "2: _" << uri << "_" << endl;
+    assert(false);
+  } catch(crawler_pp::exceptions::uri_exception &err) {
+    cout << "2: _" << "invalid: " << err.get_message() << "_" << endl;
+  }
+  try{
+    crawler_pp::data::waiting_uri uri("");
+    cout << "3: _" << uri << "_" << endl;
+    assert(false);
+  }catch(crawler_pp::exceptions::uri_exception &err){
+    cout << "3: _" << "invalid: " << err.get_message() << "_" << endl;
+  }
+  try{
+    crawler_pp::data::waiting_uri uri("ftp://www.sueddEutsche.de/any/../pAth#fragment?");
+    cout << "4: _" << uri << "_" << endl;
+  }catch(crawler_pp::exceptions::uri_exception &err){
+    cout << "4: _" << "invalid: " << err.get_message() << "_" << endl;
+  }
+  {
+    crawler_pp::data::waiting_uri uri("https://www.sueddEutsche.de/any/../pAth#fragment?");
+    cout << "5: _" << uri << "_" << endl;
+  }
+  {
+    crawler_pp::data::waiting_uri uri("http://www.sueddEutsche.de:443/any/../pAth#fragment?");
+    cout << "6: _" << uri << "_" << endl;
+  }
+  {
+    crawler_pp::data::waiting_uri uri("http://www.sueddEutsche.de:80/any/../pAth#fragment?");
+    cout << "7: _" << uri << "_" << endl;
+  }
+  {
+    crawler_pp::data::waiting_uri uri("http://www.sueddEutsche.de:/any/../pAth#fragment?");
+    cout << "8: _" << uri << "_" << endl;
+  }
 
+  
   cout << "===============================================================================" << endl;
   cout << "leaving tests.main" << endl;
 

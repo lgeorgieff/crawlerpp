@@ -11,7 +11,7 @@ $(test_folder)/tests: tests.cpp $(bin_folder)/libcrawler_pp.so uri.h $(odb_folde
 $(bin_folder)/libcrawler_pp.so: $(obj_folder)/uri.o $(obj_folder)/exceptions.o $(obj_folder)/utils.o $(bin_folder)/uri.odb.o
 	g++ -Wall -fPIC -shared $(obj_folder)/uri.o $(obj_folder)/utils.o  $(obj_folder)/exceptions.o $(obj_folder)/uri.odb.o -o $(bin_folder)/libcrawler_pp.so -std=c++11
 
-$(obj_folder)/uri.o: uri.cpp uri.h $(obj_folder)/exceptions.o $(obj_folder)/exceptions.o
+$(obj_folder)/uri.o: uri.cpp uri.h $(obj_folder)/exceptions.o $(obj_folder)/utils.o
 	g++ -Wall -fPIC -c uri.cpp -o $(obj_folder)/uri.o -std=c++11
 
 $(bin_folder)/uri.odb.o: $(odb_folder)/uri_odb_files uri.pragma.h

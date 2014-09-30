@@ -17,6 +17,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 namespace crawler_pp {
   namespace data {
@@ -28,6 +29,14 @@ namespace crawler_pp {
       // URIs, i.e. the passed URI string can be longer than MAX_LENGTH but
       // after normalization the URI must not be longer.
       static const size_t MAX_SIZE;
+      // Defines the URI schemes that are supported by crawler_pp.
+      // Currently the crawler_pp library supports only HTTP and HTTPS to
+      // request pages
+      static const std::vector<std::string> SUPPORTED_SCHEMES;
+      // Defines the URI scheme "HTTP"
+      static const std::string SCHEME_HTTP;
+      // Defines the URI scheme "HTTPS"
+      static const std::string SCHEME_HTTPS;
       // This constructor takes a string representing an URI and uses this
       // value as internal URI of this class.
       uri(std::string);
